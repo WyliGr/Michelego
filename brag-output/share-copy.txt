@@ -1,0 +1,3 @@
+Michelego turns a photo into a buildable LEGO mosaic: real colours, real parts, and a BOM ready to export.
+
+https://lego.wyliam.dev
