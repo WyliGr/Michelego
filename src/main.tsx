@@ -6,28 +6,18 @@ import './styles.css';
 type LegoColor = { name: string; hex: string; element: string; part: string };
 type Cell = LegoColor;
 
-// Palette is restricted to named LEGO colors with a real 1x1 plate reference.
+// Common LEGO colour names and calibrated swatches for the physical 3024 plate.
+// Keep this list limited to colours sold for part 3024, not every LEGO colour ever made.
 const PALETTE: LegoColor[] = [
-  { name: 'White', hex: '#F2F2F2', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Black', hex: '#05131D', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Bright Red', hex: '#C91A09', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Bright Yellow', hex: '#F2CD37', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Bright Blue', hex: '#0055BF', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Bright Green', hex: '#237841', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Bright Orange', hex: '#FE8A18', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Bright Light Blue', hex: '#9FC3E9', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Dark Bluish Gray', hex: '#6C6E68', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Light Bluish Gray', hex: '#A0A5A9', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Dark Tan', hex: '#958A73', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Tan', hex: '#E4CD9E', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Bright Pink', hex: '#FC97AC', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Dark Pink', hex: '#C870A0', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Medium Azure', hex: '#36AEBF', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Lime', hex: '#BBE90B', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Dark Red', hex: '#720E0F', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Reddish Brown', hex: '#582A12', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Sand Green', hex: '#A0BCAC', element: '3024', part: 'Plate 1 x 1' },
-  { name: 'Lavender', hex: '#E4ADC8', element: '3024', part: 'Plate 1 x 1' },
+  ...[
+    ['White','#F2F2F2'], ['Black','#05131D'], ['Very Light Gray','#E6E7E8'], ['Light Bluish Gray','#A0A5A9'], ['Dark Bluish Gray','#6C6E68'], ['Dark Gray','#595D60'],
+    ['Bright Red','#C91A09'], ['Dark Red','#720E0F'], ['Bright Light Red','#F75D5D'], ['Bright Yellow','#F2CD37'], ['Bright Light Yellow','#FFF03A'], ['Flame Yellowish Orange','#F8BB3D'],
+    ['Bright Orange','#FE8A18'], ['Dark Orange','#A95500'], ['Bright Blue','#0055BF'], ['Dark Azure','#078BC9'], ['Medium Azure','#36AEBF'], ['Bright Light Blue','#9FC3E9'], ['Sand Blue','#6074A1'], ['Dark Blue','#0A3463'],
+    ['Bright Green','#237841'], ['Dark Green','#184632'], ['Bright Light Green','#C9E788'], ['Lime','#BBE90B'], ['Olive Green','#9B9A5A'], ['Sand Green','#A0BCAC'],
+    ['Tan','#E4CD9E'], ['Dark Tan','#958A73'], ['Medium Nougat','#AA7D55'], ['Nougat','#D09168'], ['Light Nougat','#F3CFB2'], ['Reddish Brown','#582A12'], ['Dark Brown','#352100'],
+    ['Bright Pink','#FC97AC'], ['Dark Pink','#C870A0'], ['Bright Light Pink','#FEC7D0'], ['Purple','#81007B'], ['Bright Light Purple','#C9CAE2'], ['Lavender','#E4ADC8'], ['Dark Purple','#3F3691'],
+    ['Trans-Clear','#FCFCFC'], ['Trans-Black','#635F52'], ['Trans-Red','#C91A09'], ['Trans-Yellow','#F5CD2F'], ['Trans-Orange','#F08F1C'], ['Trans-Bright Green','#56B93F'], ['Trans-Neon Green','#C0F500'], ['Trans-Dark Blue','#0020A0'], ['Trans-Medium Blue','#5A93DB'], ['Trans-Light Blue','#BFEAFB'], ['Trans-Pink','#E4ADC8'], ['Trans-Purple','#A5A5CB']
+  ].map(([name, hex]) => ({ name, hex, element: '3024', part: 'Plate 1 x 1' } as LegoColor))
 ];
 const fallback = 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1200&q=85';
 
