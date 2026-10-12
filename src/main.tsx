@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Download, ImagePlus, Moon, RotateCcw, Sun, Upload } from 'lucide-react';
+import { Download, ExternalLink, ImagePlus, Moon, RotateCcw, Sun, Upload } from 'lucide-react';
 import './styles.css';
 
 type LegoColor = { name: string; hex: string; element: string; part: string };
@@ -71,7 +71,7 @@ function App() {
       </aside>
       <section className="preview-panel"><div className="panel-head preview-head"><div><span>03</span><h2>Mosaic preview</h2></div><span className="resolution">{width} x {height} <b>•</b> {total.toLocaleString('fr-FR')} plates</span></div><div className="mosaic-stage"><div className="mosaic" style={{gridTemplateColumns: `repeat(${width}, 1fr)`, aspectRatio: `${width}/${height}`}}>{cells.map((c, i) => <i key={i} style={{backgroundColor: c.hex}} title={c.name} />)}</div></div><div className="preview-foot"><span>Hover a tile to inspect its LEGO colour</span><button className="reset" onClick={() => {setImage(fallback); setWidth(48); setHeight(36)}}><RotateCcw size={14}/> Reset</button></div></section>
     </section>
-    <section className="bom-section"><div className="bom-title"><div><p className="kicker">BUILD LIST</p><h2>Bill of materials</h2></div><button className="export" onClick={exportCsv}><Download size={16}/> Export CSV</button></div><div className="bom-grid">{bom.map(item => <div className="bom-row" key={item.name}><span className="swatch" style={{background: item.hex}}/><div><strong>{item.name}</strong><small>{item.part} · LEGO {item.element}</small></div><b>{item.count}</b><span className="pieces">pieces</span></div>)}</div><p className="bom-note">Parts are all LEGO 3024, Plate 1 x 1. Quantities are calculated from the current preview and every colour maps to a named LEGO shade.</p></section>
+    <section className="bom-section"><div className="bom-title"><div><p className="kicker">BUILD LIST</p><h2>Bill of materials</h2></div><button className="export" onClick={exportCsv}><Download size={16}/> Export CSV</button></div><div className="bom-grid">{bom.map(item => <a className="bom-row" href={`https://www.lego.com/fr-fr/pick-and-build/pick-a-brick?query=${item.element}`} target="_blank" rel="noreferrer" key={item.name} title={`Acheter ${item.part} ${item.name} sur LEGO.com`}><span className="swatch" style={{background: item.hex}}/><div><strong>{item.name}</strong><small>{item.part} · LEGO {item.element}</small></div><b>{item.count}</b><span className="pieces">pieces <ExternalLink size={12}/></span></a>)}</div><p className="bom-note">Parts are all LEGO 3024, Plate 1 x 1. Quantities are calculated from the current preview and every colour maps to a named LEGO shade.</p></section>
     <footer><span>michelego</span><span>Made for tiny pixels and big feelings.</span></footer>
   </main>
 }
