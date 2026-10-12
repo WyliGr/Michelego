@@ -1,0 +1,76 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import { Download, ImagePlus, Info, Upload } from 'lucide-react';
+import './styles.css';
+
+import type { LegoColor } from './types';
+import { LEGO_PARTS } from './legoParts';
+import { REBRICKABLE_COLOR_IDS } from './rebrickableColors';
+type Cell = LegoColor;
+const PALETTE = LEGO_PARTS;
+const fallback = 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1200&q=85';
+
+function nearest(r: number, g: number, b: number): LegoColor {
+  return PALETTE.reduce((best, color) => {
+    const h = color.hex.slice(1);
+    const cr = parseInt(h.slice(0, 2), 16), cg = parseInt(h.slice(2, 4), 16), cb = parseInt(h.slice(4, 6), 16);
+    const distance = (r - cr) ** 2 + (g - cg) ** 2 + (b - cb) ** 2;
+    const bh = best.hex.slice(1);
+    const br = parseInt(bh.slice(0, 2), 16), bg = parseInt(bh.slice(2, 4), 16), bb = parseInt(bh.slice(4, 6), 16);
+    return distance < ((r - br) ** 2 + (g - bg) ** 2 + (b - bb) ** 2) ? color : best;
+  }, PALETTE[0]);
+}
+
+function App() {
+  const [image, setImage] = useState(fallback);
+  const [width, setWidth] = useState(48);
+  const [height, setHeight] = useState(36);
+  const [aspectRatio, setAspectRatio] = useState(4 / 3);
+  const [cells, setCells] = useState<Cell[]>([]);
+  const [isDragging, setDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { makeMosaic(image, width, height, setCells); }, [image, width, height]);
+  const bom = useMemo(() => PALETTE.map(color => ({ ...color, count: cells.filter(c => c.name === color.name && c.element === color.element).length })).filter(x => x.count), [cells]);
+  const total = width * height;
+
+  function handleFile(file?: File) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const url = URL.createObjectURL(file); const source = new Image();
+    source.onload = () => { const ratio = source.naturalWidth / source.naturalHeight; setAspectRatio(ratio); setHeight(Math.max(12, Math.round(width / ratio))); };
+    source.src = url; setImage(url);
+  }
+  function exportCsv() {
+    const csv = ['Color,LEGO element,Part name,Quantity', ...bom.map(x => `${x.name},${x.element},${x.part},${x.count}`)].join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'michelego-bom.csv'; a.click();
+  }
+  function exportRebrickableCsv() {
+    const csv = ['part_num,color_id,quantity,is_spare', ...bom.map(x => `${x.element},${REBRICKABLE_COLOR_IDS[x.name] ?? ''},${x.count},False`)].join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'michelego-rebrickable-inventory.csv'; a.click();
+  }
+  return <main className="shell">
+    <section className="intro"><div><p className="kicker">PHOTO TO MOSAIC</p><h1>Make a memory.<br /><em>One brick at a time.</em></h1></div><p className="intro-copy">Upload a photo, tune the grid, and get a buildable parts list using real LEGO colours and 1x1 plates.</p></section>
+    <section className="workspace">
+      <aside className="controls">
+        <div className="panel-head"><span>01</span><h2>Source image</h2></div>
+        <div className={`dropzone ${isDragging ? 'dragging' : ''}`} onClick={() => inputRef.current?.click()} onDragOver={e => {e.preventDefault(); setDragging(true)}} onDragLeave={() => setDragging(false)} onDrop={e => {e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0])}}>
+          <img src={image} alt="Source preview" /><div className="drop-overlay"><ImagePlus size={22} /><strong>Drop a photo here</strong><span>or browse your files</span></div>
+        </div><input ref={inputRef} type="file" accept="image/*" hidden onChange={e => handleFile(e.target.files?.[0])} />
+        <button className="upload-button" onClick={() => inputRef.current?.click()}><Upload size={16}/> Choose another image</button>
+        <div className="panel-head dimensions"><span>02</span><h2>Mosaic size</h2></div>
+        <label>Width <output>{width} studs</output><input type="range" min="12" max="96" value={width} onChange={e => {const v = Number(e.target.value); const nextHeight = Math.max(12, Math.round(v / aspectRatio)); setWidth(v); setHeight(nextHeight)}} /></label>
+        <label>Height <output>{height} studs</output><input type="range" min="12" max="96" value={height} disabled aria-label="Height verrouillée au ratio de l'image" /></label>
+        <div className="size-presets">{[32, 48].map(size => { const landscape = aspectRatio >= 1; const nextWidth = landscape ? size : Math.max(12, Math.round(size * aspectRatio)); const nextHeight = landscape ? Math.max(12, Math.round(size / aspectRatio)) : size; return <button className={Math.max(width, height) === size ? 'active' : ''} onClick={() => {setWidth(nextWidth); setHeight(nextHeight)}} key={size}>{size} studs</button>})}</div>
+        <p className="helper"><Info size={16} aria-hidden="true"/> Le côté le plus long est réglé à la taille choisie. Le ratio de la photo est conservé.</p>
+      </aside>
+      <section className="preview-panel"><div className="panel-head preview-head"><div><span>03</span><h2>Mosaic preview</h2></div><span className="resolution">{width} x {height} <b>•</b> {total.toLocaleString('fr-FR')} plates</span></div><div className="mosaic-stage"><div className="mosaic" style={{gridTemplateColumns: `repeat(${width}, 1fr)`, aspectRatio: `${width}/${height}`}}>{cells.map((c, i) => <i key={i} style={{backgroundColor: c.hex}} title={c.name} />)}</div></div><div className="preview-foot"><span>{width} x {height} studs</span></div></section>
+    </section>
+    <section className="bom-section"><div className="bom-title"><div><p className="kicker">BUILD LIST</p><h2>Bill of materials</h2></div><div className="bom-actions"><button className="export" onClick={exportCsv}><Download size={16}/> Export CSV</button><button className="export secondary" onClick={exportRebrickableCsv}><Download size={16}/> Rebrickable CSV</button></div></div><div className="bom-grid">{bom.map(item => <a className="bom-row" href={`https://www.lego.com/fr-fr/pick-and-build/pick-a-brick?query=${item.element}${item.elementId ? `&selectedElement=${item.elementId}` : ''}`} target="_blank" rel="noreferrer" key={item.name + item.element}><img className="part-preview" src={item.imageUrl} alt={`${item.part} ${item.name}`} loading="lazy"/><div><strong>{item.name}</strong><small>{item.part} · LEGO {item.element}</small></div><b>{item.count}</b></a>)}</div></section>
+    <footer><span>michelego</span><a className="creator-credit" href="https://wyliam.dev" target="_blank" rel="noreferrer">Made with &lt;3 by Wyliam</a></footer>
+  </main>
+}
+
+function makeMosaic(src: string, width: number, height: number, done: (cells: Cell[]) => void) {
+  const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => { const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); if (!ctx) return; ctx.drawImage(img, 0, 0, width, height); const data = ctx.getImageData(0, 0, width, height).data; const out: Cell[] = []; for (let i = 0; i < data.length; i += 4) out.push(nearest(data[i], data[i + 1], data[i + 2])); done(out); }; img.src = src;
+}
+createRoot(document.getElementById('root')!).render(<App />);
