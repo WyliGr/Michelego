@@ -17,14 +17,11 @@ Michelego is a small, privacy-friendly, client-side web application that convert
   - a Rebrickable-compatible inventory CSV.
 - Run entirely in the browser: uploaded images are processed locally and are not sent to a Michelego backend.
 
-## Demo video
+## Preview
 
-[![Watch the Michelego demo](./brag-output/brag.jpg)](./brag-output/brag.mp4)
+![Michelego interface preview](./docs/michelego-preview.png)
 
-> A short product video showing the photo-to-mosaic flow, size controls, and LEGO bill of materials.
-
-[Download or watch the full MP4](./brag-output/brag.mp4).
-
+Michelego turns a photo into a LEGO mosaic while preserving its aspect ratio, then generates a buildable parts list.
 
 ## Quick start with Docker
 
