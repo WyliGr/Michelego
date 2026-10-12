@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Download, ExternalLink, ImagePlus, Moon, RotateCcw, Sun, Upload } from 'lucide-react';
+import { Download, ImagePlus, Info, Upload } from 'lucide-react';
 import './styles.css';
 
 import type { LegoColor } from './types';
@@ -26,7 +26,6 @@ function App() {
   const [width, setWidth] = useState(48);
   const [height, setHeight] = useState(36);
   const [aspectRatio, setAspectRatio] = useState(4 / 3);
-  const [dark, setDark] = useState(false);
   const [cells, setCells] = useState<Cell[]>([]);
   const [isDragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,8 +48,7 @@ function App() {
     const csv = ['part_num,color_id,quantity,is_spare', ...bom.map(x => `${x.element},${REBRICKABLE_COLOR_IDS[x.name] ?? ''},${x.count},False`)].join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'michelego-rebrickable-inventory.csv'; a.click();
   }
-  return <main className={`shell ${dark ? 'dark' : ''}`}>
-    <header className="topbar"><div className="brand"><span className="brand-mark">M</span><span>michelego</span></div><div className="top-actions"><div className="top-meta"><span className="live-dot" />Live preview <span className="slash">/</span> LEGO palette</div><button className="theme-toggle" onClick={() => setDark(value => !value)} aria-label={dark ? 'Activer le thème clair' : 'Activer le thème sombre'}>{dark ? <Sun size={16}/> : <Moon size={16}/>}<span>{dark ? 'Light' : 'Dark'}</span></button></div></header>
+  return <main className="shell">
     <section className="intro"><div><p className="kicker">PHOTO TO MOSAIC</p><h1>Make a memory.<br /><em>One brick at a time.</em></h1></div><p className="intro-copy">Upload a photo, tune the grid, and get a buildable parts list using real LEGO colours and 1x1 plates.</p></section>
     <section className="workspace">
       <aside className="controls">
@@ -60,14 +58,14 @@ function App() {
         </div><input ref={inputRef} type="file" accept="image/*" hidden onChange={e => handleFile(e.target.files?.[0])} />
         <button className="upload-button" onClick={() => inputRef.current?.click()}><Upload size={16}/> Choose another image</button>
         <div className="panel-head dimensions"><span>02</span><h2>Mosaic size</h2></div>
-        <label>Width <output>{width} studs</output><input type="range" min="12" max="96" value={width} onChange={e => {const v = Number(e.target.value); setWidth(v); setHeight(Math.max(12, Math.round(v / aspectRatio)))}} /></label>
-        <label>Height <output>{height} studs</output><input type="range" min="12" max="72" value={height} disabled aria-label="Height verrouillée au ratio de l'image" /></label>
-        <div className="size-presets">{[24, 36, 48, 64].map(v => { const h = Math.max(12, Math.round(v / aspectRatio)); return <button className={width === v ? 'active' : ''} onClick={() => {setWidth(v); setHeight(h)}} key={v}>{v}x{h}</button>})}</div>
-        <p className="helper"><span>i</span> Le ratio de l’image est conservé automatiquement. La hauteur suit la largeur.</p>
+        <label>Width <output>{width} studs</output><input type="range" min="12" max="96" value={width} onChange={e => {const v = Number(e.target.value); const nextHeight = Math.max(12, Math.round(v / aspectRatio)); setWidth(v); setHeight(nextHeight)}} /></label>
+        <label>Height <output>{height} studs</output><input type="range" min="12" max="96" value={height} disabled aria-label="Height verrouillée au ratio de l'image" /></label>
+        <div className="size-presets">{[32, 48].map(size => { const landscape = aspectRatio >= 1; const nextWidth = landscape ? size : Math.max(12, Math.round(size * aspectRatio)); const nextHeight = landscape ? Math.max(12, Math.round(size / aspectRatio)) : size; return <button className={Math.max(width, height) === size ? 'active' : ''} onClick={() => {setWidth(nextWidth); setHeight(nextHeight)}} key={size}>{size} studs</button>})}</div>
+        <p className="helper"><Info size={16} aria-hidden="true"/> Le côté le plus long est réglé à la taille choisie. Le ratio de la photo est conservé.</p>
       </aside>
-      <section className="preview-panel"><div className="panel-head preview-head"><div><span>03</span><h2>Mosaic preview</h2></div><span className="resolution">{width} x {height} <b>•</b> {total.toLocaleString('fr-FR')} plates</span></div><div className="mosaic-stage"><div className="mosaic" style={{gridTemplateColumns: `repeat(${width}, 1fr)`, aspectRatio: `${width}/${height}`}}>{cells.map((c, i) => <i key={i} style={{backgroundColor: c.hex}} title={c.name} />)}</div></div><div className="preview-foot"><span>Hover a tile to inspect its LEGO colour</span><button className="reset" onClick={() => {setImage(fallback); setAspectRatio(4 / 3); setWidth(48); setHeight(36)}}><RotateCcw size={14}/> Reset</button></div></section>
+      <section className="preview-panel"><div className="panel-head preview-head"><div><span>03</span><h2>Mosaic preview</h2></div><span className="resolution">{width} x {height} <b>•</b> {total.toLocaleString('fr-FR')} plates</span></div><div className="mosaic-stage"><div className="mosaic" style={{gridTemplateColumns: `repeat(${width}, 1fr)`, aspectRatio: `${width}/${height}`}}>{cells.map((c, i) => <i key={i} style={{backgroundColor: c.hex}} title={c.name} />)}</div></div><div className="preview-foot"><span>{width} x {height} studs</span></div></section>
     </section>
-    <section className="bom-section"><div className="bom-title"><div><p className="kicker">BUILD LIST</p><h2>Bill of materials</h2></div><div className="bom-actions"><button className="export" onClick={exportCsv}><Download size={16}/> Export CSV</button><button className="export secondary" onClick={exportRebrickableCsv}><Download size={16}/> Rebrickable CSV</button></div></div><div className="bom-grid">{bom.map(item => <a className="bom-row" href={`https://www.lego.com/fr-fr/pick-and-build/pick-a-brick?query=${item.element}${item.elementId ? `&selectedElement=${item.elementId}` : ''}`} target="_blank" rel="noreferrer" key={item.name + item.element}><img className="part-preview" src={item.imageUrl} alt={`${item.part} ${item.name}`} loading="lazy"/><div><strong>{item.name}</strong><small>{item.part} · LEGO {item.element}</small></div><b>{item.count}</b><span className="pieces">pieces <ExternalLink size={12}/></span></a>)}</div></section>
+    <section className="bom-section"><div className="bom-title"><div><p className="kicker">BUILD LIST</p><h2>Bill of materials</h2></div><div className="bom-actions"><button className="export" onClick={exportCsv}><Download size={16}/> Export CSV</button><button className="export secondary" onClick={exportRebrickableCsv}><Download size={16}/> Rebrickable CSV</button></div></div><div className="bom-grid">{bom.map(item => <a className="bom-row" href={`https://www.lego.com/fr-fr/pick-and-build/pick-a-brick?query=${item.element}${item.elementId ? `&selectedElement=${item.elementId}` : ''}`} target="_blank" rel="noreferrer" key={item.name + item.element}><img className="part-preview" src={item.imageUrl} alt={`${item.part} ${item.name}`} loading="lazy"/><div><strong>{item.name}</strong><small>{item.part} · LEGO {item.element}</small></div><b>{item.count}</b></a>)}</div></section>
     <footer><span>michelego</span><a className="creator-credit" href="https://wyliam.dev" target="_blank" rel="noreferrer">Made with &lt;3 by Wyliam</a></footer>
   </main>
 }
