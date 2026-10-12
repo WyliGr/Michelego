@@ -3,35 +3,10 @@ import { createRoot } from 'react-dom/client';
 import { Download, ExternalLink, ImagePlus, Moon, RotateCcw, Sun, Upload } from 'lucide-react';
 import './styles.css';
 
-type LegoColor = { name: string; hex: string; element: string; elementId?: string; part: string };
+import type { LegoColor } from './types';
+import { LEGO_PARTS } from './legoParts';
 type Cell = LegoColor;
-
-// Common LEGO colour names and calibrated swatches for the physical 3024 plate.
-// Keep this list limited to colours sold for part 3024, not every LEGO colour ever made.
-const PALETTE: LegoColor[] = [
-  ...[
-    ['White','#F2F2F2'], ['Black','#05131D'], ['Very Light Gray','#E6E7E8'], ['Light Bluish Gray','#A0A5A9'], ['Dark Bluish Gray','#6C6E68'], ['Dark Gray','#595D60'],
-    ['Bright Red','#C91A09'], ['Dark Red','#720E0F'], ['Bright Light Red','#F75D5D'], ['Bright Yellow','#F2CD37'], ['Bright Light Yellow','#FFF03A'], ['Flame Yellowish Orange','#F8BB3D'],
-    ['Bright Orange','#FE8A18'], ['Dark Orange','#A95500'], ['Bright Blue','#0055BF'], ['Medium Blue','#5A93DB'], ['Earth Blue','#0A3463'], ['Dark Azure','#078BC9'], ['Medium Azure','#36AEBF'], ['Bright Light Blue','#9FC3E9'], ['Sand Blue','#6074A1'], ['Dark Blue','#0A3463'],
-    ['Bright Green','#237841'], ['Dark Green','#184632'], ['Bright Light Green','#C9E788'], ['Lime','#BBE90B'], ['Olive Green','#9B9A5A'], ['Sand Green','#A0BCAC'],
-    ['Tan','#E4CD9E'], ['Dark Tan','#958A73'], ['Medium Nougat','#AA7D55'], ['Nougat','#D09168'], ['Light Nougat','#F3CFB2'], ['Reddish Brown','#582A12'], ['Dark Brown','#352100'],
-    ['Bright Pink','#FC97AC'], ['Dark Pink','#C870A0'], ['Bright Light Pink','#FEC7D0'], ['Purple','#81007B'], ['Bright Light Purple','#C9CAE2'], ['Lavender','#E4ADC8'], ['Dark Purple','#3F3691'],
-    ['Trans-Clear','#FCFCFC'], ['Trans-Black','#635F52'], ['Trans-Red','#C91A09'], ['Trans-Yellow','#F5CD2F'], ['Trans-Orange','#F08F1C'], ['Trans-Bright Green','#56B93F'], ['Trans-Neon Green','#C0F500'], ['Trans-Dark Blue','#0020A0'], ['Trans-Medium Blue','#5A93DB'], ['Trans-Light Blue','#BFEAFB'], ['Trans-Pink','#E4ADC8'], ['Trans-Purple','#A5A5CB']
-  ].map(([name, hex]) => ({ name, hex, element: '3024', part: 'Plate 1 x 1' } as LegoColor))
-];
-// Element IDs are sourced from Rebrickable's public inventory_parts export for part 3024.
-// The aliases cover the display names used above where Rebrickable uses a shorter name.
-const ELEMENT_IDS: Record<string, string> = {
-  'White': '302401', 'Black': '302426', 'Very Light Gray': '4130380', 'Light Bluish Gray': '4211399', 'Dark Bluish Gray': '4210719', 'Dark Gray': '302427',
-  'Bright Red': '302421', 'Dark Red': '4183901', 'Bright Light Red': '6258091', 'Bright Yellow': '302424', 'Bright Light Yellow': '4599541', 'Flame Yellowish Orange': '4645042',
-  'Bright Orange': '4524929', 'Dark Orange': '4277109', 'Bright Blue': '302423', 'Medium Blue': '4179826', 'Earth Blue': '4184108', 'Dark Azure': '6089779', 'Medium Azure': '6013827', 'Bright Light Blue': '4649755', 'Sand Blue': '4153288', 'Dark Blue': '4184108',
-  'Bright Green': '302428', 'Dark Green': '4271440', 'Bright Light Green': '6069255', 'Lime': '4122438', 'Olive Green': '6058245', 'Sand Green': '4153291',
-  'Tan': '4159553', 'Dark Tan': '4497084', 'Medium Nougat': '4645054', 'Nougat': '6330584', 'Light Nougat': '4496989', 'Reddish Brown': '4221744', 'Dark Brown': '6194729',
-  'Bright Pink': '4245305', 'Dark Pink': '4245304', 'Bright Light Pink': '6633960', 'Purple': '4224857', 'Bright Light Purple': '4619521', 'Lavender': '6015121', 'Dark Purple': '4224857',
-  'Trans-Clear': '3000840', 'Trans-Black': '6446336', 'Trans-Red': '3000841', 'Trans-Yellow': '3000844', 'Trans-Orange': '6252040', 'Trans-Bright Green': '3000848', 'Trans-Neon Green': '4114162', 'Trans-Dark Blue': '3000843', 'Trans-Medium Blue': '6051920', 'Trans-Light Blue': '6051920', 'Trans-Pink': '6633960', 'Trans-Purple': '6635174',
-};
-for (const color of PALETTE) color.elementId = ELEMENT_IDS[color.name];
-
+const PALETTE = LEGO_PARTS;
 const fallback = 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1200&q=85';
 
 function nearest(r: number, g: number, b: number): LegoColor {
@@ -55,7 +30,7 @@ function App() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { makeMosaic(image, width, height, setCells); }, [image, width, height]);
-  const bom = useMemo(() => PALETTE.map(color => ({ ...color, count: cells.filter(c => c.name === color.name).length })).filter(x => x.count), [cells]);
+  const bom = useMemo(() => PALETTE.map(color => ({ ...color, count: cells.filter(c => c.name === color.name && c.element === color.element).length })).filter(x => x.count), [cells]);
   const total = width * height;
 
   function handleFile(file?: File) {
