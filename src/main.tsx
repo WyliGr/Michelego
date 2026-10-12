@@ -46,7 +46,7 @@ function App() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'michelego-bom.csv'; a.click();
   }
   function exportRebrickableCsv() {
-    const csv = ['part_num,color_id,quantity,is_spare', ...bom.map(x => `${x.element},${REBRICKABLE_COLOR_IDS[x.name] ?? ''},${x.count},False`)].join('\\n');
+    const csv = ['part_num,color_id,quantity,is_spare', ...bom.map(x => `${x.element},${REBRICKABLE_COLOR_IDS[x.name] ?? ''},${x.count},False`)].join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'michelego-rebrickable-inventory.csv'; a.click();
   }
   return <main className={`shell ${dark ? 'dark' : ''}`}>
